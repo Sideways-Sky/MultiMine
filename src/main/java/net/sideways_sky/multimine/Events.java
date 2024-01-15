@@ -11,8 +11,6 @@ import org.bukkit.event.block.BlockDamageEvent;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.sideways_sky.multimine.MultiMine.debugMessage;
-
 public class Events implements Listener {
     static Map<Block, DamagedBlock> damagedBlockMap = new HashMap<>();
     @EventHandler
@@ -22,11 +20,14 @@ public class Events implements Listener {
     @EventHandler
     public static void onBlockDamage(BlockDamageEvent e){
         if(e.getInstaBreak()){return;}
+        DamagedBlock damagedBlock;
         if(!damagedBlockMap.containsKey(e.getBlock())){
-            damagedBlockMap.put(e.getBlock(), new DamagedBlock(e.getBlock(), e.getPlayer()));
-        }else {
-            damagedBlockMap.get(e.getBlock()).stopFade();
+            damagedBlock = new DamagedBlock(e.getBlock());
+            damagedBlockMap.put(e.getBlock(), damagedBlock);
+        } else {
+            damagedBlock = damagedBlockMap.get(e.getBlock());
         }
+        damagedBlock.setActive(e.getPlayer(), true);
     }
 
     @EventHandler
@@ -35,16 +36,13 @@ public class Events implements Listener {
         if(block == null){return;}
         DamagedBlock damagedBlock = damagedBlockMap.get(block);
         if(damagedBlock == null){return;}
-        damagedBlock.lastPlayer = e.getPlayer();
-        damagedBlock.damageTick();
+        damagedBlock.damageTick(e.getPlayer());
     }
 
     @EventHandler
     public static void onBlockBreak(BlockBreakEvent e){
         DamagedBlock damagedBlock = damagedBlockMap.get(e.getBlock());
         if(damagedBlock == null){return;}
-        debugMessage("Break: " + damagedBlock.damage);
-        damagedBlock.lastPlayer = e.getPlayer();
         damagedBlock.delete(false);
     }
 
@@ -52,8 +50,7 @@ public class Events implements Listener {
     public static void onBlockDamageAbort(BlockDamageAbortEvent e){
         DamagedBlock damagedBlock = damagedBlockMap.get(e.getBlock());
         if(damagedBlock == null){return;}
-        debugMessage("Abort: " + damagedBlock.damage);
-        damagedBlock.startFade();
+        damagedBlock.setActive(e.getPlayer(), false);
     }
 
 }
