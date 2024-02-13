@@ -39,20 +39,17 @@ public class DamagedBlock {
         debugMessage("damageTick: " + damage + " + " + speed + " = " + (damage+speed) + " T: " + block.getWorld().getTime()+ " | "+this);
         damage += speed;
         if(damage > 1){
-            delete(true);
+            player.breakBlock(block);
         }
     }
 
-    public void delete(boolean breakBlock){
-        debugMessage("delete block - break: "+breakBlock+" | "+this);
+    public void delete(){
+        debugMessage("delete block | "+this);
         Bukkit.getScheduler().cancelTask(packetTaskID);
         tryStopFade();
-        damage = 0;
+        damage = -1;
         sendDamagedBlockPacket(-1);
         Bukkit.getPluginManager().callEvent(new DamagedBlockDeleteEvent(block, this));
-        if(breakBlock){
-            activePlayers.get(0).breakBlock(block);
-        }
     }
     public void setActive(Player player, boolean active){
         if(active && !activePlayers.contains(player)){
@@ -78,7 +75,7 @@ public class DamagedBlock {
         debugMessage("Fade: " + damage + " - " + fadeDamageReduction + " = " + (damage-fadeDamageReduction) + " | " + this);
         damage -= fadeDamageReduction;
         if(damage < 0){
-            delete(false);
+            delete();
         }
     }
     private void sendDamagedBlockPacket(){

@@ -1,6 +1,7 @@
 package net.sideways_sky.multimine;
 
 import io.papermc.paper.event.player.PlayerArmSwingEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -43,7 +44,7 @@ public class Events implements Listener {
     public static void onBlockBreak(BlockBreakEvent e){
         DamagedBlock damagedBlock = damagedBlockMap.get(e.getBlock());
         if(damagedBlock == null){return;}
-        damagedBlock.delete(false);
+        damagedBlock.delete();
     }
 
     @EventHandler
