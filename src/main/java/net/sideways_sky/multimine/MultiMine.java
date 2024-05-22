@@ -8,12 +8,13 @@ public final class MultiMine extends JavaPlugin {
     public static boolean debug = false;
     @Override
     public void onEnable() {
+
         instance = this;
         saveDefaultConfig();
         debug = getConfig().getBoolean("debug");
-        DamagedBlock.fadeStartDelay = getConfig().getInt("fade.start-delay");
-        DamagedBlock.fadeIntervalDelay = getConfig().getInt("fade.interval");
-        DamagedBlock.fadeDamageReduction = (float) getConfig().getDouble("fade.amount");
+        DamagedBlock.FadeStartDelay = getConfig().getInt("fade.start-delay");
+        DamagedBlock.FadeIntervalDelay = getConfig().getInt("fade.interval");
+        DamagedBlock.FadeDamageReduction = (float) getConfig().getDouble("fade.amount");
         Bukkit.getPluginManager().registerEvents(new Events(), this);
     }
 

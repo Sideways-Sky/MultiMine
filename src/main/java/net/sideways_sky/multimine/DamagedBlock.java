@@ -1,89 +1,85 @@
 package net.sideways_sky.multimine;
 
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
-import net.minecraft.world.entity.Entity;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_20_R3.CraftServer;
-import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.block.CraftBlock;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static net.sideways_sky.multimine.MultiMine.debugMessage;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
 
 public class DamagedBlock {
-    public static int fadeStartDelay = 40;
-    public static int fadeIntervalDelay = 20;
-    public static float fadeDamageReduction = 0.1F;
+    public static int FadeStartDelay = 40;
+    public static int FadeIntervalDelay = 20;
+    public static float FadeDamageReduction = 0.1F;
+
     public DamagedBlock(Block block){
         this.block = block;
-        EntityId = Entity.nextEntityId();
-        packetTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(MultiMine.instance, this::sendDamagedBlockPacket, 1, 1);
-        debugMessage("new block | " + this);
+        entityId = net.minecraft.world.entity.Entity.nextEntityId();
+        debugMessage("Created");
     }
-    private final int EntityId;
+    public void debugMessage(String message){
+        MultiMine.debugMessage("Block[ " + entityId + " ]: " + message);
+    }
+
+    private final int entityId;
+    public Map<Entity, Float> entityDamageMap = new HashMap<>();
+
     private final Block block;
-    public float damage = 0;
-    private final List<Player> activePlayers = new ArrayList<>();
-    private final int packetTaskID;
-    private int fadeTaskID = -1;
-    private int getProgress(){
-        return Math.round(damage * 9);
+    public void brake(Entity entity){
+        if(entity instanceof Player){
+            ((Player) entity).breakBlock(block);
+        } else {
+            block.breakNaturally();
+        }
     }
-    public void damageTick(Player player){
-        float speed = block.getBreakSpeed(player);
-        debugMessage("damageTick: " + damage + " + " + speed + " = " + (damage+speed) + " T: " + block.getWorld().getTime()+ " | "+this);
-        damage += speed;
-        if(damage > 1){
-            player.breakBlock(block);
+
+    public float damage = 0;
+    private int fadeTaskID = -1;
+
+    public void startFade(){
+        debugMessage("Fade Start");
+        fadeTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(MultiMine.instance, this::fade, FadeStartDelay, FadeIntervalDelay);
+    }
+    public void stopFade(){
+        if(fadeTaskID != -1){
+            debugMessage("Fade Stop");
+            Bukkit.getScheduler().cancelTask(fadeTaskID);
+            fadeTaskID = -1;
         }
     }
 
     public void delete(){
-        debugMessage("delete block | "+this);
-        Bukkit.getScheduler().cancelTask(packetTaskID);
-        tryStopFade();
-        damage = -1;
-        sendDamagedBlockPacket(-1);
-        Bukkit.getPluginManager().callEvent(new DamagedBlockDeleteEvent(block, this));
+        stopFade();
+        sendPacket(-1);
+        Events.damagedBlockMap.remove(block);
+        debugMessage("Deleted");
     }
-    public void setActive(Player player, boolean active){
-        if(active && !activePlayers.contains(player)){
-            activePlayers.add(player);
-            debugMessage("set active player: " + activePlayers + " | " +this);
-            tryStopFade();
-        } else if(!active){
-            activePlayers.remove(player);
-            debugMessage("set inactive player: " + activePlayers + " | " +this);
-            if(activePlayers.isEmpty()){
-                debugMessage("Starting Fade | "+this);
-                fadeTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(MultiMine.instance, this::fade, fadeStartDelay, fadeIntervalDelay);
-            }
-        }
-    }
-    private void tryStopFade(){
-        if(fadeTaskID != -1){
-            debugMessage("Stopping Fade | "+this);
-            Bukkit.getScheduler().cancelTask(fadeTaskID);
-        }
-    }
+
     private void fade(){
-        debugMessage("Fade: " + damage + " - " + fadeDamageReduction + " = " + (damage-fadeDamageReduction) + " | " + this);
-        damage -= fadeDamageReduction;
+        float preFadeDamageReduction = damage;
+        damage -= FadeDamageReduction;
+        Consumer<String> message = (messageSuffix) -> debugMessage("Fade: " + damage + " -= " + FadeDamageReduction + messageSuffix);
         if(damage < 0){
+            message.accept(" -deleting");
             delete();
+        } else if (Math.round(damage * 10F) != Math.round(preFadeDamageReduction * 10F)) {
+            message.accept(" -updating");
+            sendPacket();
+        } else {
+            message.accept("");
         }
     }
-    private void sendDamagedBlockPacket(){
-        sendDamagedBlockPacket(getProgress());
+
+    public void sendPacket(){
+        sendPacket(Math.round(damage * 10F));
     }
-    private void sendDamagedBlockPacket(int progress){
-        ClientboundBlockDestructionPacket packet = new ClientboundBlockDestructionPacket(EntityId,
-                new BlockPos(block.getX(), block.getY(), block.getZ()), progress);
-        ((CraftServer) Bukkit.getServer()).getHandle().broadcast(null, block.getX(), block.getY(), block.getZ(), 120, ((CraftWorld) block.getWorld()).getHandle().dimension(), packet);
+    private void sendPacket(int progress){
+        ((CraftWorld) block.getWorld()).getHandle().destroyBlockProgress(entityId, ((CraftBlock) block).getPosition(), progress);
     }
+
 }
