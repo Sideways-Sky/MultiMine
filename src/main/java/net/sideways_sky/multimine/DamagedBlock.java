@@ -1,12 +1,14 @@
 package net.sideways_sky.multimine;
 
-
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
+
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,17 +41,20 @@ public class DamagedBlock {
     }
 
     public float damage = 0;
-    private int fadeTaskID = -1;
+    private @Nullable ScheduledTask fadeTaskID = null;
 
     public void startFade(){
         debugMessage("Fade Start");
-        fadeTaskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(MultiMine.instance, this::fade, FadeStartDelay, FadeIntervalDelay);
+        fadeTaskID = MultiMine.instance.getServer().getRegionScheduler().runAtFixedRate(MultiMine.instance, block.getLocation(), (e) -> fade(), FadeStartDelay, FadeIntervalDelay);
+//                .scheduleSyncRepeatingTask(MultiMine.instance, this::fade, FadeStartDelay, FadeIntervalDelay);
     }
     public void stopFade(){
-        if(fadeTaskID != -1){
+        if(fadeTaskID != null){
             debugMessage("Fade Stop");
-            Bukkit.getScheduler().cancelTask(fadeTaskID);
-            fadeTaskID = -1;
+//            Bukkit.getScheduler().cancelTask(fadeTaskID);
+//            fadeTaskID = -1;
+            fadeTaskID.cancel();
+            fadeTaskID = null;
         }
     }
 
@@ -60,7 +65,7 @@ public class DamagedBlock {
         debugMessage("Deleted");
     }
 
-    private void fade(){
+    public void fade(){
         float preFadeDamageReduction = damage;
         damage -= FadeDamageReduction;
         Consumer<String> message = (messageSuffix) -> debugMessage("Fade: " + damage + " -= " + FadeDamageReduction + messageSuffix);

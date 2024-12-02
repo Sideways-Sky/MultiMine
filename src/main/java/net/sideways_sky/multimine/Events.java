@@ -11,8 +11,6 @@ import org.bukkit.event.block.BlockDamageEvent;
 import java.util.HashMap;
 import java.util.Map;
 
-
-
 public class Events implements Listener {
     public static Map<Block, DamagedBlock> damagedBlockMap = new HashMap<>();
     @EventHandler
