@@ -1,0 +1,5 @@
+name: MultiMine
+version: '${version}'
+main: net.sideways_sky.multimine.MultiMine
+api-version: '1.20'
+folia-supported: true

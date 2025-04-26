@@ -1,0 +1,10 @@
+fade:
+  # How long between when the player stops damaging and the first fade
+  start-delay: 40
+  # How long between each fade (in ticks)
+  interval: 20
+  # Damage decrease per fade. A fully damaged block is 1, a non damaged block is 0
+  # Set to 1 or more to fade block instantly
+  amount: 0.1
+
+debug: false
