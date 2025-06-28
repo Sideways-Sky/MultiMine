@@ -1,7 +1,6 @@
 package net.sideways_sky.multimine;
 
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
-import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 
 import org.bukkit.craftbukkit.CraftWorld;
@@ -41,20 +40,17 @@ public class DamagedBlock {
     }
 
     public float damage = 0;
-    private @Nullable ScheduledTask fadeTaskID = null;
+    private @Nullable ScheduledTask fadeTask = null;
 
     public void startFade(){
         debugMessage("Fade Start");
-        fadeTaskID = MultiMine.instance.getServer().getRegionScheduler().runAtFixedRate(MultiMine.instance, block.getLocation(), (e) -> fade(), FadeStartDelay, FadeIntervalDelay);
-//                .scheduleSyncRepeatingTask(MultiMine.instance, this::fade, FadeStartDelay, FadeIntervalDelay);
+        fadeTask = MultiMine.instance.getServer().getRegionScheduler().runAtFixedRate(MultiMine.instance, block.getLocation(), (e) -> fade(), FadeStartDelay, FadeIntervalDelay);
     }
     public void stopFade(){
-        if(fadeTaskID != null){
+        if(fadeTask != null){
             debugMessage("Fade Stop");
-//            Bukkit.getScheduler().cancelTask(fadeTaskID);
-//            fadeTaskID = -1;
-            fadeTaskID.cancel();
-            fadeTaskID = null;
+            fadeTask.cancel();
+            fadeTask = null;
         }
     }
 

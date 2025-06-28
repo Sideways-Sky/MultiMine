@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id("xyz.jpenilla.run-paper") version "2.3.1"
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.14"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
 }
 
 group = 'net.sideways_sky'
@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.21.6-R0.1-SNAPSHOT")
 }
 
 def targetJavaVersion = 21
@@ -39,13 +39,12 @@ tasks.withType(JavaCompile).configureEach {
     }
 }
 
-runPaper.folia.registerTask({version "1.20.1" })
 tasks {
     assemble {
         dependsOn(reobfJar)
     }
     runServer {
-        minecraftVersion("1.21.4")
+        minecraftVersion("1.21.6")
     }
 }
 
